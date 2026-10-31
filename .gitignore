@@ -1,0 +1,14 @@
+# Залежності та збірка (також є у backend/.gitignore і frontend/.gitignore)
+node_modules/
+vendor/
+dist/
+
+# Локальні налаштування і бази
+.env
+*.sqlite
+
+# Службові файли редакторів і ОС
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

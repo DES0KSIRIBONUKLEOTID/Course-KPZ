@@ -1,0 +1,4 @@
+/** Кольоровий бейдж статусу заявки. */
+export default function StatusBadge({ status, label }) {
+  return <span className={`badge badge-${status}`}>{label}</span>
+}
