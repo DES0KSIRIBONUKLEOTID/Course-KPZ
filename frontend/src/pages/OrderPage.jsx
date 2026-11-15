@@ -5,14 +5,17 @@ import FormModal from '../components/FormModal'
 import Icon from '../components/Icon'
 import OrderProgress from '../components/OrderProgress'
 import PageHeader from '../components/PageHeader'
+import Skeleton from '../components/Skeleton'
 import StatusBadge from '../components/StatusBadge'
-import { money } from '../format'
+import { duration, money } from '../format'
 import { useFetch } from '../hooks'
+import { useToast } from '../toastContext'
 
 /** Картка заявки: роботи, запчастини, автоматичний розрахунок вартості, зміна статусу. */
 export default function OrderPage() {
   const { id } = useParams()
   const { data, error, reload } = useFetch(`/orders/${id}`)
+  const toast = useToast()
   const services = useFetch('/services')
   const parts = useFetch('/parts')
 
@@ -21,13 +24,14 @@ export default function OrderPage() {
 
   const order = data?.data
   if (error) return <div className="alert">{error}</div>
-  if (!order) return <p className="muted">Завантаження...</p>
+  if (!order) return <Skeleton rows={7} cols={4} />
 
   // виконує дію з API, після чого перезавантажує заявку; помилки показує зверху
-  async function act(action) {
+  async function act(action, message) {
     setActionError('')
     try {
       await action()
+      if (message) toast(message)
       reload()
       parts.reload() // на складі змінилась кількість
     } catch (err) {
@@ -37,7 +41,7 @@ export default function OrderPage() {
 
   function changeStatus(status) {
     if (status.value === 'cancelled' && !window.confirm('Скасувати заявку? Запчастини повернуться на склад.')) return
-    act(() => api.patch(`/orders/${order.id}/status`, { status: status.value }))
+    act(() => api.patch(`/orders/${order.id}/status`, { status: status.value }), `Статус змінено: ${status.label}`)
   }
 
   const { totals } = order
@@ -64,8 +68,21 @@ export default function OrderPage() {
 
       {actionError && <div className="alert">{actionError}</div>}
 
+      {order.is_overdue && (
+        <div className="alert warn">
+          Ремонт затягується. Заявка перебуває в статусі «В ремонті» вже {duration(order.status_seconds)}, а ліміт
+          становить {order.overdue_after_hours} год.
+        </div>
+      )}
+
       <div className="card progress-card">
         <OrderProgress status={order.status} />
+        {!order.is_closed && (
+          <div className={`status-time ${order.is_overdue ? 'overdue' : ''}`}>
+            <Icon name="clock" size={15} /> У статусі «{order.status_label}» {duration(order.status_seconds)} (з{' '}
+            {order.status_since})
+          </div>
+        )}
       </div>
 
       <div className="layout-2">
@@ -82,7 +99,7 @@ export default function OrderPage() {
             <ItemsTable
               items={order.works}
               closed={order.is_closed}
-              onRemove={(item) => act(() => api.delete(`/order-works/${item.id}`))}
+              onRemove={(item) => act(() => api.delete(`/order-works/${item.id}`), 'Роботу видалено')}
             />
           </section>
 
@@ -98,7 +115,7 @@ export default function OrderPage() {
             <ItemsTable
               items={order.parts}
               closed={order.is_closed}
-              onRemove={(item) => act(() => api.delete(`/order-parts/${item.id}`))}
+              onRemove={(item) => act(() => api.delete(`/order-parts/${item.id}`), 'Запчастину повернуто на склад')}
             />
           </section>
         </div>
@@ -185,12 +202,17 @@ export default function OrderPage() {
               label: 'Послуга',
               type: 'select',
               required: true,
-              options: (services.data ?? []).map((s) => ({ value: s.id, label: `${s.name} — ${money(s.price)}` })),
+              options: (services.data ?? []).map((s) => ({ value: s.id, label: `${s.name} - ${money(s.price)}` })),
             },
             { name: 'quantity', label: 'Кількість', type: 'number', min: 1, default: 1, required: true },
           ]}
           submitText="Додати"
-          onSubmit={(values) => api.post(`/orders/${order.id}/works`, values).then(reload)}
+          onSubmit={(values) =>
+            api.post(`/orders/${order.id}/works`, values).then(() => {
+              reload()
+              toast('Роботу додано, вартість перераховано')
+            })
+          }
           onClose={() => setModal(null)}
         />
       )}
@@ -205,7 +227,7 @@ export default function OrderPage() {
               required: true,
               options: (parts.data ?? []).map((p) => ({
                 value: p.id,
-                label: `${p.name} — ${money(p.price)} (на складі: ${p.stock})`,
+                label: `${p.name} - ${money(p.price)} (на складі: ${p.stock})`,
               })),
             },
             { name: 'quantity', label: 'Кількість', type: 'number', min: 1, default: 1, required: true },
@@ -215,6 +237,7 @@ export default function OrderPage() {
             api.post(`/orders/${order.id}/parts`, values).then(() => {
               reload()
               parts.reload()
+              toast('Запчастину додано, склад оновлено')
             })
           }
           onClose={() => setModal(null)}

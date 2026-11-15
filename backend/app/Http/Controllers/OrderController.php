@@ -41,12 +41,50 @@ class OrderController extends Controller
         ]);
 
         $orders = Order::with(self::RELATIONS)
+            // майстер бачить лише свої заявки
+            ->when(! $request->user()->isAdmin(), fn ($query) => $query->where('master_id', $request->user()->id))
             ->when($request->status, fn ($query, $status) => $query->where('status', $status))
             ->when($request->from, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
             ->when($request->to, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
             ->when($request->search, fn ($query, $text) => $this->applySearch($query, trim($text)))
             ->latest('id')
             ->paginate(15);
+
+        return OrderResource::collection($orders);
+    }
+
+    /**
+     * Кількість заявок за статусами для швидких фільтрів: {all: 5, new: 2, in_repair: 1, ...}.
+     * Майстер бачить лише свої, адміністратор усі.
+     */
+    public function counts(Request $request)
+    {
+        $byStatus = Order::query()
+            ->when(! $request->user()->isAdmin(), fn ($query) => $query->where('master_id', $request->user()->id))
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $counts = ['all' => (int) $byStatus->sum()];
+        foreach (OrderStatus::cases() as $status) {
+            $counts[$status->value] = (int) ($byStatus[$status->value] ?? 0);
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Заявки із затягнутим ремонтом (для сповіщень): найстаріші першими.
+     * Майстер бачить лише свої, адміністратор усі.
+     */
+    public function overdue(Request $request)
+    {
+        $orders = Order::with(self::RELATIONS)
+            ->overdue()
+            ->when(! $request->user()->isAdmin(), fn ($query) => $query->where('master_id', $request->user()->id))
+            ->orderBy('status_changed_at')
+            ->limit(50)
+            ->get();
 
         return OrderResource::collection($orders);
     }
@@ -86,13 +124,16 @@ class OrderController extends Controller
         return $this->respond($order)->setStatusCode(201);
     }
 
-    public function show(Order $order)
+    public function show(Request $request, Order $order)
     {
+        $this->authorizeOrder($request, $order);
+
         return $this->respond($order);
     }
 
     public function changeStatus(Request $request, Order $order)
     {
+        $this->authorizeOrder($request, $order);
         $data = $request->validate(['status' => ['required', Rule::enum(OrderStatus::class)]]);
 
         $this->orders->changeStatus($order, OrderStatus::from($data['status']));
@@ -102,6 +143,7 @@ class OrderController extends Controller
 
     public function addWork(Request $request, Order $order)
     {
+        $this->authorizeOrder($request, $order);
         $data = $request->validate([
             'service_id' => ['required', 'exists:services,id'],
             'quantity' => ['required', 'integer', 'min:1'],
@@ -112,9 +154,10 @@ class OrderController extends Controller
         return $this->respond($order);
     }
 
-    public function removeWork(OrderWork $work)
+    public function removeWork(Request $request, OrderWork $work)
     {
         $order = $work->order;
+        $this->authorizeOrder($request, $order);
         $this->orders->removeWork($work);
 
         return $this->respond($order);
@@ -122,6 +165,7 @@ class OrderController extends Controller
 
     public function addPart(Request $request, Order $order)
     {
+        $this->authorizeOrder($request, $order);
         $data = $request->validate([
             'part_id' => ['required', 'exists:parts,id'],
             'quantity' => ['required', 'integer', 'min:1'],
@@ -132,12 +176,23 @@ class OrderController extends Controller
         return $this->respond($order);
     }
 
-    public function removePart(OrderPart $part)
+    public function removePart(Request $request, OrderPart $part)
     {
         $order = $part->order;
+        $this->authorizeOrder($request, $order);
         $this->orders->removePart($part);
 
         return $this->respond($order);
+    }
+
+    /** Майстер працює лише зі своїми заявками, адміністратор з усіма. */
+    private function authorizeOrder(Request $request, Order $order): void
+    {
+        $user = $request->user();
+
+        if (! $user->isAdmin() && $order->master_id !== $user->id) {
+            abort(403, 'Це не ваша заявка');
+        }
     }
 
     /** Повертає актуальну заявку (з перерахованою вартістю). */

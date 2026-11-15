@@ -1,15 +1,18 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../auth'
 import Icon from '../components/Icon'
 import PageHeader from '../components/PageHeader'
+import Skeleton from '../components/Skeleton'
 import StatusBadge from '../components/StatusBadge'
-import { initials, money } from '../format'
+import { duration, initials, money } from '../format'
 import { useDebounce, useFetch } from '../hooks'
 import NewOrderModal from './NewOrderModal'
 
 /** Список заявок з пошуком, фільтрами за статусом і датою та пагінацією. */
 export default function OrdersPage() {
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [from, setFrom] = useState('')
@@ -20,8 +23,21 @@ export default function OrdersPage() {
   const debouncedSearch = useDebounce(search)
   const statuses = useFetch('/order-statuses')
   const orders = useFetch('/orders', { search: debouncedSearch, status, from, to, page })
+  const counts = useFetch('/order-counts')
 
   const meta = orders.data?.meta
+
+  // посилання зі швидкого пошуку: ?new=1 відкриває форму заявки, ?search=... підставляє фільтр
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('new') && isAdmin) setCreating(true)
+    if (params.get('search') !== null) {
+      setSearch(params.get('search'))
+      setPage(1)
+    }
+    if (params.toString()) setParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   // будь-яка зміна фільтра повертає на першу сторінку
   const filter = (setter) => (event) => {
@@ -40,12 +56,18 @@ export default function OrdersPage() {
   return (
     <>
       <PageHeader
-        title="Заявки на ремонт"
-        subtitle="Пошук і фільтрація заявок, перегляд статусів та вартості"
+        title={isAdmin ? 'Заявки на ремонт' : 'Мої заявки'}
+        subtitle={
+          isAdmin
+            ? 'Пошук і фільтрація заявок, перегляд статусів та вартості'
+            : 'Заявки, призначені вам. Пошук, фільтри, статуси та вартість'
+        }
         actions={
-          <button className="btn primary" onClick={() => setCreating(true)}>
-            <Icon name="plus" size={16} /> Нова заявка
-          </button>
+          isAdmin && (
+            <button className="btn primary" onClick={() => setCreating(true)}>
+              <Icon name="plus" size={16} /> Нова заявка
+            </button>
+          )
         }
       />
 
@@ -58,14 +80,6 @@ export default function OrdersPage() {
             onChange={filter(setSearch)}
           />
         </div>
-        <select value={status} onChange={filter(setStatus)}>
-          <option value="">Усі статуси</option>
-          {statuses.data?.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
         <label className="date-field">
           <span>з</span>
           <input type="date" value={from} onChange={filter(setFrom)} />
@@ -79,10 +93,30 @@ export default function OrdersPage() {
         </button>
       </div>
 
+      <div className="chips" role="tablist">
+        {[{ value: '', label: 'Усі' }, ...(statuses.data ?? [])].map((s) => (
+          <button
+            key={s.value}
+            role="tab"
+            aria-selected={status === s.value}
+            className={`chip ${status === s.value ? 'active' : ''}`}
+            onClick={() => {
+              setStatus(s.value)
+              setPage(1)
+            }}
+          >
+            {s.value && <span className={`chip-dot badge-${s.value}`} />}
+            {s.label}
+            <b>{counts.data?.[s.value || 'all'] ?? 0}</b>
+          </button>
+        ))}
+      </div>
+
       {orders.error && <div className="alert">{orders.error}</div>}
 
       <section className="card flush">
-        <div className="table-wrap">
+        {orders.loading && !orders.data && <Skeleton rows={6} cols={6} />}
+        <div className="table-wrap" hidden={!orders.data}>
           <table className="table">
             <thead>
               <tr>
@@ -98,7 +132,9 @@ export default function OrdersPage() {
             <tbody>
               {orders.data?.data.map((order) => (
                 <tr key={order.id} className="clickable" onClick={() => navigate(`/orders/${order.id}`)}>
-                  <td className="order-no">№{order.id}</td>
+                  <td>
+                    <span className="order-no">№{order.id}</span>
+                  </td>
                   <td>
                     <div className="person">
                       <span className="avatar sm">{initials(order.client.full_name)}</span>
@@ -112,6 +148,12 @@ export default function OrdersPage() {
                   <td className="nowrap">{order.master.name}</td>
                   <td>
                     <StatusBadge status={order.status} label={order.status_label} />
+                    {order.status === 'in_repair' && (
+                      <div className={`time-chip ${order.is_overdue ? 'overdue' : ''}`} title="Час у статусі «В ремонті»">
+                        <Icon name="clock" size={13} /> {duration(order.status_seconds)}
+                        {order.is_overdue && ' · затягнуто'}
+                      </div>
+                    )}
                   </td>
                   <td className="muted nowrap hide-md">{order.created_at}</td>
                   <td className="num strong">{money(order.totals.total)}</td>

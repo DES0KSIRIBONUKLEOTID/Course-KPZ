@@ -7,7 +7,7 @@ use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-/** Прайс-лист робіт. Читати можуть усі, змінювати — лише адміністратор. */
+/** Прайс-лист робіт. Читати можуть усі, змінювати - лише адміністратор. */
 class ServiceController extends Controller
 {
     private function rules(?Service $service = null): array

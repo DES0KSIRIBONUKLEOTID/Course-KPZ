@@ -29,12 +29,12 @@ const ADD_FIELDS = [
 const EDIT_FIELDS = [
   { name: 'name', label: 'ПІБ', required: true },
   { name: 'email', label: 'Email (логін)', type: 'email', required: true },
-  { name: 'password', label: 'Новий пароль (порожньо — не змінювати)', type: 'password' },
+  { name: 'password', label: 'Новий пароль (порожньо - не змінювати)', type: 'password' },
   ROLE_FIELD,
   { name: 'is_active', label: 'Активний (може входити в систему)', type: 'checkbox' },
 ]
 
-/** Керування працівниками — лише для адміністратора. Видалення немає: працівника вимикають. */
+/** Керування працівниками - лише для адміністратора. Видалення немає: працівника вимикають. */
 export default function UsersPage() {
   const users = useFetch('/users')
   const [selected, setSelected] = useState(null)

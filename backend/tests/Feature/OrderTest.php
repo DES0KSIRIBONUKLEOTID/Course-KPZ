@@ -4,13 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\Part;
 use App\Models\Service;
+use App\Models\User;
 use Tests\TestCase;
 
 class OrderTest extends TestCase
 {
     public function test_order_can_be_created_with_status_new(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
 
         $response = $this->postJson('/api/orders', [
@@ -25,7 +26,7 @@ class OrderTest extends TestCase
 
     public function test_total_cost_is_calculated_with_client_discount(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder(discount: 10);
         $service = Service::create(['name' => 'Діагностика', 'price' => 1000]);
         $part = Part::create(['name' => 'SSD', 'price' => 500, 'stock' => 5]);
@@ -44,7 +45,7 @@ class OrderTest extends TestCase
 
     public function test_adding_part_decreases_stock_and_removing_returns_it(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
         $part = Part::create(['name' => 'SSD', 'price' => 500, 'stock' => 5]);
 
@@ -59,7 +60,7 @@ class OrderTest extends TestCase
 
     public function test_cannot_use_more_parts_than_in_stock(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
         $part = Part::create(['name' => 'SSD', 'price' => 500, 'stock' => 1]);
 
@@ -71,7 +72,7 @@ class OrderTest extends TestCase
 
     public function test_status_follows_allowed_transitions_only(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
 
         // з «Нова» одразу у «Видана» не можна
@@ -85,7 +86,7 @@ class OrderTest extends TestCase
 
     public function test_cancelling_order_returns_parts_to_stock(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
         $part = Part::create(['name' => 'SSD', 'price' => 500, 'stock' => 5]);
         $this->postJson("/api/orders/{$order->id}/parts", ['part_id' => $part->id, 'quantity' => 2]);
@@ -97,7 +98,7 @@ class OrderTest extends TestCase
 
     public function test_closed_order_cannot_be_changed(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $order = $this->makeOrder();
         $service = Service::create(['name' => 'Діагностика', 'price' => 200]);
         $this->patchJson("/api/orders/{$order->id}/status", ['status' => 'cancelled'])->assertOk();
@@ -108,7 +109,7 @@ class OrderTest extends TestCase
 
     public function test_orders_can_be_searched_and_filtered(): void
     {
-        $this->signIn();
+        $this->signIn(User::ADMIN);
         $first = $this->makeOrder();
         $second = $this->makeOrder();
         $second->device->client->update(['full_name' => 'Шевченко Марія']);

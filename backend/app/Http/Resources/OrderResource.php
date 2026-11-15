@@ -26,6 +26,11 @@ class OrderResource extends JsonResource
             'status_label' => $this->status->label(),
             'allowed_statuses' => array_map(fn ($s) => $s->toOption(), $this->status->allowedNext()),
             'is_closed' => $this->status->isFinal(),
+            // час у поточному статусі та ознака затягнутого ремонту
+            'status_since' => $this->status_changed_at?->format('Y-m-d H:i'),
+            'status_seconds' => $this->secondsInStatus(),
+            'is_overdue' => $this->isOverdue(),
+            'overdue_after_hours' => config('service.repair_overdue_hours'),
             'client' => [
                 'id' => $client->id,
                 'full_name' => $client->full_name,

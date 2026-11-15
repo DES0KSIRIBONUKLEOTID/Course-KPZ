@@ -1,7 +1,10 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { initials, roleLabel } from '../format'
+import CommandPalette from './CommandPalette'
 import Icon from './Icon'
+import Notifications from './Notifications'
 
 const NAV = [
   { to: '/orders', icon: 'orders', label: 'Заявки' },
@@ -11,9 +14,27 @@ const NAV = [
   { to: '/users', icon: 'staff', label: 'Співробітники', adminOnly: true },
 ]
 
-/** Бічна панель з навігацією + місце для поточної сторінки. */
+/** Бічна панель з навігацією, швидким пошуком (Ctrl+K) та місце для поточної сторінки. */
 export default function Layout() {
   const { user, logout, isAdmin } = useAuth()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const { pathname } = useLocation()
+
+  // гарячі клавіші: Ctrl+K (Cmd+K) відкриває/закриває пошук, «/» відкриває поза полями вводу
+  useEffect(() => {
+    function onKey(event) {
+      const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setPaletteOpen((open) => !open)
+      } else if (event.key === '/' && !typing) {
+        event.preventDefault()
+        setPaletteOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
     <div className="shell">
@@ -27,6 +48,12 @@ export default function Layout() {
             <small>Ремонт техніки</small>
           </div>
         </div>
+
+        <button className="search-trigger" onClick={() => setPaletteOpen(true)}>
+          <Icon name="search" size={16} />
+          <span>Пошук і дії</span>
+          <kbd>Ctrl K</kbd>
+        </button>
 
         <nav>
           {NAV.filter((item) => !item.adminOnly || isAdmin).map((item) => (
@@ -43,6 +70,7 @@ export default function Layout() {
             <strong>{user.name}</strong>
             <small>{roleLabel(user.role)}</small>
           </div>
+          <Notifications />
           <button className="icon-btn" title="Вийти" onClick={logout}>
             <Icon name="logout" />
           </button>
@@ -50,8 +78,13 @@ export default function Layout() {
       </aside>
 
       <main className="content">
-        <Outlet />
+        {/* key змушує сторінку з'являтися з анімацією при кожному переході */}
+        <div key={pathname} className="page">
+          <Outlet />
+        </div>
       </main>
+
+      {paletteOpen && <CommandPalette open onClose={() => setPaletteOpen(false)} />}
     </div>
   )
 }

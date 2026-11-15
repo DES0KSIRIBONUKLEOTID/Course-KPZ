@@ -66,7 +66,7 @@ export default function NewOrderModal({ onClose, onCreated }) {
               }}
               required
             >
-              <option value="">— оберіть —</option>
+              <option value="">- оберіть -</option>
               {clients.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.full_name} ({c.phone})
@@ -83,7 +83,7 @@ export default function NewOrderModal({ onClose, onCreated }) {
           <span>Техніка *</span>
           <div className="row">
             <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)} required disabled={!clientId}>
-              <option value="">— оберіть —</option>
+              <option value="">- оберіть -</option>
               {devices.data?.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.type} {d.brand} {d.model} {d.serial_number && `(S/N ${d.serial_number})`}

@@ -8,7 +8,7 @@ import Icon from './Icon'
  *   type: text (за замовчуванням), number, email, password, textarea, select, checkbox
  *   options (для select): [{ value, label }]
  * initial:  початкові значення { name: value }
- * onSubmit: async (values) => ... ; якщо кине помилку — вона покажеться у формі
+ * onSubmit: async (values) => ... ; якщо кине помилку - вона покажеться у формі
  */
 export default function FormModal({ title, fields, initial = {}, onSubmit, onClose, submitText = 'Зберегти' }) {
   const [values, setValues] = useState(() =>
@@ -74,7 +74,7 @@ function Input({ field, value, onChange }) {
   if (type === 'select') {
     return (
       <select value={value} onChange={(e) => onChange(e.target.value)} required={rest.required}>
-        <option value="">— оберіть —</option>
+        <option value="">- оберіть -</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

@@ -41,7 +41,7 @@ enum OrderStatus: string
         };
     }
 
-    /** Заявка закрита — змінювати її вже не можна. */
+    /** Заявка закрита - змінювати її вже не можна. */
     public function isFinal(): bool
     {
         return $this === self::Issued || $this === self::Cancelled;

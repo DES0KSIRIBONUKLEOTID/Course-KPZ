@@ -3,7 +3,7 @@ import { api } from './api'
 
 /**
  * Завантажує дані з API при зміні path/params.
- * Якщо path === null — нічого не завантажує.
+ * Якщо path === null - нічого не завантажує.
  * Повертає { data, error, loading, reload }.
  */
 export function useFetch(path, params) {
@@ -38,7 +38,7 @@ export function useFetch(path, params) {
   return { data, error, loading, reload: () => setVersion((v) => v + 1) }
 }
 
-/** Повертає значення із затримкою — щоб не робити запит на кожну натиснуту літеру. */
+/** Повертає значення із затримкою - щоб не робити запит на кожну натиснуту літеру. */
 export function useDebounce(value, delay = 300) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {

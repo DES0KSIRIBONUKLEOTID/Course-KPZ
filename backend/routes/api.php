@@ -23,19 +23,20 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/masters', [UserController::class, 'masters']);
 
     // Клієнти і техніка
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('clients.devices', DeviceController::class)->shallow()->except('show');
 
-    // Довідники: перегляд — усім, зміна — лише адміністратору
+    // Довідники: перегляд - усім, зміна - лише адміністратору
     Route::get('/services', [ServiceController::class, 'index']);
     Route::get('/parts', [PartController::class, 'index']);
 
-    // Заявки
+    // Заявки: адміністратор бачить усі, майстер лише свої (перевіряє контролер)
     Route::get('/order-statuses', [OrderController::class, 'statuses']);
-    Route::apiResource('orders', OrderController::class)->only(['index', 'store', 'show']);
+    Route::get('/order-counts', [OrderController::class, 'counts']); // лічильники для швидких фільтрів
+    Route::get('/overdue-orders', [OrderController::class, 'overdue']); // сповіщення про затягнутий ремонт
+    Route::apiResource('orders', OrderController::class)->only(['index', 'show']);
     Route::patch('/orders/{order}/status', [OrderController::class, 'changeStatus']);
     Route::post('/orders/{order}/works', [OrderController::class, 'addWork']);
     Route::delete('/order-works/{work}', [OrderController::class, 'removeWork']);
@@ -47,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Лише для адміністратора
     Route::middleware('can:admin')->group(function () {
+        Route::post('/orders', [OrderController::class, 'store']); // заявки створює лише адміністратор
+        Route::get('/masters', [UserController::class, 'masters']);
         Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
         Route::apiResource('parts', PartController::class)->except(['index', 'show']);
         Route::apiResource('users', UserController::class)->only(['index', 'store', 'update']);

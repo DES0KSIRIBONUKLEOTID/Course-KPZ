@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(!getToken()) // чи вже перевірили збережений токен
 
   useEffect(() => {
-    // якщо сервер відповів 401 — токен недійсний, виходимо
+    // якщо сервер відповів 401 - токен недійсний, виходимо
     setUnauthorizedHandler(() => {
       clearToken()
       setUser(null)
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
     try {
       await api.post('/logout')
     } catch {
-      // токен міг уже стати недійсним — це нормально
+      // токен міг уже стати недійсним - це нормально
     }
     clearToken()
     setUser(null)

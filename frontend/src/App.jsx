@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth'
 import Layout from './components/Layout'
+import ToastProvider from './components/ToastProvider'
 import CatalogPage from './pages/CatalogPage'
 import ClientsPage from './pages/ClientsPage'
 import LoginPage from './pages/LoginPage'
@@ -22,6 +23,7 @@ function Protected({ adminOnly = false, children }) {
 export default function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -49,6 +51,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/orders" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   )
 }

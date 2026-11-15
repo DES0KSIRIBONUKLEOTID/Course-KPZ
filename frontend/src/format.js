@@ -1,5 +1,16 @@
 export const money = (value) => `${Number(value).toFixed(2)} грн`
 
+// Тривалість у зручному вигляді: «3 дн. 4 год.», «5 год. 20 хв.», «12 хв.»
+export function duration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+  const mins = minutes % 60
+  if (days > 0) return `${days} дн. ${hours} год.`
+  if (hours > 0) return `${hours} год. ${mins} хв.`
+  return `${mins} хв.`
+}
+
 // Дата у форматі РРРР-ММ-ДД для <input type="date"> (за локальним часом)
 export function dateInput(date) {
   const pad = (n) => String(n).padStart(2, '0')

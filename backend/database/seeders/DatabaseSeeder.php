@@ -60,6 +60,8 @@ class DatabaseSeeder extends Seeder
         $orders->addPart($inRepair, $parts[3], 1);
         $orders->changeStatus($inRepair, OrderStatus::Diagnostics);
         $orders->changeStatus($inRepair, OrderStatus::InRepair);
+        // для демонстрації сповіщень: ремонт триває вже 80 годин (ліміт 72)
+        $inRepair->forceFill(['status_changed_at' => now()->subHours(80)])->save();
 
         Order::create(['device_id' => $printer->id, 'master_id' => $master->id, 'problem' => 'Смуги на друку']);
     }

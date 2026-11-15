@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useToast } from '../toastContext'
 import FormModal from './FormModal'
 import Icon from './Icon'
 
@@ -7,8 +8,8 @@ import Icon from './Icon'
  * Сама дані не завантажує: список (items) і дії (onAdd, onUpdate, onDelete) передає сторінка.
  *
  * columns:    [{ key, title, render?(item) }]
- * fields:     поля форми додавання (див. FormModal); editFields — для редагування, якщо відрізняються
- * canEdit:    false — кнопки керування приховані (лише перегляд)
+ * fields:     поля форми додавання (див. FormModal); editFields - для редагування, якщо відрізняються
+ * canEdit:    false - кнопки керування приховані (лише перегляд)
  * onDelete:   якщо не передано, кнопки видалення немає
  * onSelect:   викликається при кліку на рядок; selectedId підсвічує вибраний рядок
  */
@@ -27,8 +28,9 @@ export default function CrudPanel({
   onSelect,
   selectedId,
 }) {
+  const toast = useToast()
   const [search, setSearch] = useState('')
-  const [modal, setModal] = useState(null) // { item } — редагування, {} — додавання
+  const [modal, setModal] = useState(null) // { item } - редагування, {} - додавання
   const [error, setError] = useState('')
 
   // пошук за текстом усіх колонок (без урахування регістру)
@@ -48,6 +50,7 @@ export default function CrudPanel({
     try {
       setError('')
       await onDelete(item)
+      toast('Запис видалено')
     } catch (err) {
       setError(err.message)
     }
@@ -137,7 +140,10 @@ export default function CrudPanel({
           title={modal.item ? 'Редагування' : 'Новий запис'}
           fields={modal.item ? editFields : fields}
           initial={modal.item ?? {}}
-          onSubmit={(values) => (modal.item ? onUpdate(modal.item, values) : onAdd(values))}
+          onSubmit={async (values) => {
+            await (modal.item ? onUpdate(modal.item, values) : onAdd(values))
+            toast(modal.item ? 'Зміни збережено' : 'Запис додано')
+          }}
           onClose={() => setModal(null)}
         />
       )}

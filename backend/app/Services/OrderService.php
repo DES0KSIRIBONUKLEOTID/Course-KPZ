@@ -32,6 +32,7 @@ class OrderService
             }
 
             $order->status = $new;
+            $order->status_changed_at = now();
             $order->closed_at = $new->isFinal() ? now() : null;
             $order->save();
         });
@@ -97,7 +98,7 @@ class OrderService
     private function ensureEditable(Order $order): void
     {
         if ($order->status->isFinal()) {
-            $this->fail('order', 'Заявку закрито — змінювати роботи та запчастини не можна');
+            $this->fail('order', 'Заявку закрито - змінювати роботи та запчастини не можна');
         }
     }
 

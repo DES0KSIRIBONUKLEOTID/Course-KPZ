@@ -7,7 +7,7 @@ use App\Models\Part;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-/** Склад запчастин. Читати можуть усі, змінювати — лише адміністратор. */
+/** Склад запчастин. Читати можуть усі, змінювати - лише адміністратор. */
 class PartController extends Controller
 {
     private function rules(?Part $part = null): array

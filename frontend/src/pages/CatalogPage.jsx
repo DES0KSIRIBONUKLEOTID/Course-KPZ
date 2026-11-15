@@ -30,7 +30,7 @@ const PART_COLUMNS = [
       p.stock === 0 ? (
         <span className="tag danger">немає</span>
       ) : p.stock <= 3 ? (
-        <span className="tag warn">{p.stock} шт. — мало</span>
+        <span className="tag warn">{p.stock} шт. - мало</span>
       ) : (
         `${p.stock} шт.`
       ),

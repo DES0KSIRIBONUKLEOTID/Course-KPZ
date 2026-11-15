@@ -20,7 +20,36 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'closed_at' => 'datetime',
+            'status_changed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // у момент створення заявка щойно отримала свій перший статус
+        static::creating(function (Order $order) {
+            $order->status_changed_at ??= now();
+        });
+    }
+
+    /** Скільки секунд заявка перебуває в поточному статусі. */
+    public function secondsInStatus(): int
+    {
+        return $this->status_changed_at ? (int) $this->status_changed_at->diffInSeconds(now(), true) : 0;
+    }
+
+    /** Ремонт затягнувся: статус «В ремонті» триває довше за ліміт із config/service.php. */
+    public function isOverdue(): bool
+    {
+        return $this->status === OrderStatus::InRepair
+            && $this->secondsInStatus() > config('service.repair_overdue_hours') * 3600;
+    }
+
+    /** Вибірка заявок, у яких ремонт затягнувся (для сповіщень). */
+    public function scopeOverdue($query)
+    {
+        return $query->where('status', OrderStatus::InRepair)
+            ->where('status_changed_at', '<=', now()->subHours(config('service.repair_overdue_hours')));
     }
 
     public function device(): BelongsTo
