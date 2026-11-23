@@ -147,6 +147,40 @@ npm run dev -- --host         # Vite покаже адресу вигляду ht
 
 Це лише демонстраційні паролі для локальної розробки.
 
+## Розгортання в інтернеті (Vercel + Railway)
+
+Vercel і Firebase не запускають Laravel із MySQL, тому система ділиться на дві частини: React-клієнт на Vercel,
+а Laravel і MySQL на Railway.
+
+**1. Бекенд і база на Railway**
+
+1. New Project → Deploy from GitHub repo → обрати цей репозиторій, у налаштуваннях сервісу Root Directory = `backend`
+   (Railway сам знайде `Dockerfile`).
+2. Додати до проєкту базу: New → Database → MySQL.
+3. У змінних сервісу бекенду задати:
+
+| Змінна | Значення |
+|---|---|
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_KEY` | результат `php artisan key:generate --show` |
+| `APP_URL` | адреса, яку видасть Railway |
+| `DB_CONNECTION` | `mysql` |
+| `DB_URL` | `${{MySQL.MYSQL_URL}}` |
+| `SEED_DEMO` | `true` (демо-дані; після першого запуску можна прибрати) |
+| `SEED_ADMIN_PASSWORD`, `SEED_MASTER_PASSWORD` | власні паролі замість демонстраційних |
+
+4. Settings → Networking → Generate Domain. Міграції виконуються автоматично під час запуску (`backend/docker/start.sh`).
+
+**2. Клієнт на Vercel**
+
+1. У файлі `frontend/vercel.json` замінити адресу в `destination` на домен Railway і закомітити зміну.
+2. Add New → Project → обрати репозиторій, Root Directory = `frontend`, пресет Vite (збірка `npm run build`, каталог `dist`).
+3. Vercel перенаправляє запити `/api/*` на Railway, тому налаштовувати CORS не потрібно.
+
+Для публічного розгортання обов'язково задайте власні паролі змінними `SEED_ADMIN_PASSWORD` і `SEED_MASTER_PASSWORD`,
+бо демонстраційні паролі з цього README відомі всім.
+
 ## Тести
 
 ```bash
