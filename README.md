@@ -147,36 +147,37 @@ npm run dev -- --host         # Vite покаже адресу вигляду ht
 
 Це лише демонстраційні паролі для локальної розробки.
 
-## Розгортання в інтернеті (Vercel + Railway)
+## Розгортання в інтернеті (Vercel + Render + TiDB Cloud)
 
-Vercel і Firebase не запускають Laravel із MySQL, тому система ділиться на дві частини: React-клієнт на Vercel,
-а Laravel і MySQL на Railway.
+Vercel і Firebase не запускають Laravel із MySQL, тому система ділиться на три частини: React-клієнт на Vercel,
+Laravel на Render (безкоштовний план, після простою перший запит відповідає повільніше) і MySQL-сумісна база на TiDB Cloud.
 
-**1. Бекенд і база на Railway**
+**1. База даних на TiDB Cloud**
 
-1. New Project → Deploy from GitHub repo → обрати цей репозиторій, у налаштуваннях сервісу Root Directory = `backend`
-   (Railway сам знайде `Dockerfile`).
-2. Додати до проєкту базу: New → Database → MySQL.
-3. У змінних сервісу бекенду задати:
+1. Створити кластер Serverless (безкоштовний), у SQL Editor виконати `CREATE DATABASE service_center;`.
+2. У розділі Connect взяти параметри підключення: хост (на кшталт `gateway01.<регіон>.prod.aws.tidbcloud.com`),
+   порт `4000`, ім'я користувача (з префіксом, `xxxx.root`) і пароль.
+
+**2. Бекенд на Render**
+
+1. New → Blueprint → обрати цей репозиторій (`render.yaml` описує сервіс), або New → Web Service → Docker із Root Directory `backend`.
+2. Заповнити змінні, позначені в `render.yaml` як секретні:
 
 | Змінна | Значення |
 |---|---|
-| `APP_ENV` | `production` |
-| `APP_DEBUG` | `false` |
 | `APP_KEY` | результат `php artisan key:generate --show` |
-| `APP_URL` | адреса, яку видасть Railway |
-| `DB_CONNECTION` | `mysql` |
-| `DB_URL` | `${{MySQL.MYSQL_URL}}` |
-| `SEED_DEMO` | `true` (демо-дані; після першого запуску можна прибрати) |
+| `APP_URL` | адреса сервісу на Render |
+| `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD` | параметри з TiDB Cloud |
 | `SEED_ADMIN_PASSWORD`, `SEED_MASTER_PASSWORD` | власні паролі замість демонстраційних |
 
-4. Settings → Networking → Generate Domain. Міграції виконуються автоматично під час запуску (`backend/docker/start.sh`).
+   Інші змінні (`DB_PORT=4000`, шифроване з'єднання `MYSQL_ATTR_SSL_CA`, `SEED_DEMO=true`) уже задані. Міграції та демо-дані
+   виконуються автоматично під час запуску (`backend/docker/start.sh`).
 
-**2. Клієнт на Vercel**
+**3. Клієнт на Vercel**
 
-1. У файлі `frontend/vercel.json` замінити адресу в `destination` на домен Railway і закомітити зміну.
+1. У файлі `frontend/vercel.json` замінити адресу в `destination` на адресу сервісу Render і закомітити зміну.
 2. Add New → Project → обрати репозиторій, Root Directory = `frontend`, пресет Vite (збірка `npm run build`, каталог `dist`).
-3. Vercel перенаправляє запити `/api/*` на Railway, тому налаштовувати CORS не потрібно.
+3. Vercel перенаправляє запити `/api/*` на Render, тому налаштовувати CORS не потрібно.
 
 Для публічного розгортання обов'язково задайте власні паролі змінними `SEED_ADMIN_PASSWORD` і `SEED_MASTER_PASSWORD`,
 бо демонстраційні паролі з цього README відомі всім.
