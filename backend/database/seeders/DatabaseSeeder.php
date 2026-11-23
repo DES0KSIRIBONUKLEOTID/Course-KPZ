@@ -19,10 +19,19 @@ class DatabaseSeeder extends Seeder
 {
     public function run(OrderService $orders): void
     {
+        // Повторний запуск (наприклад, під час перезапуску на хостингу) нічого не дублює
+        if (User::exists()) {
+            return;
+        }
+
+        // Паролі демо-акаунтів можна змінити змінними середовища, що важливо для публічного розгортання
+        $adminPassword = env('SEED_ADMIN_PASSWORD', 'admin123');
+        $masterPassword = env('SEED_MASTER_PASSWORD', 'master123');
+
         // Працівники
-        User::create(['name' => 'Коваленко Олег', 'email' => 'admin@service.test', 'password' => 'admin123', 'role' => User::ADMIN]);
-        $master = User::create(['name' => 'Мельник Андрій', 'email' => 'master@service.test', 'password' => 'master123', 'role' => User::MASTER]);
-        $master2 = User::create(['name' => 'Шевченко Ірина', 'email' => 'iryna@service.test', 'password' => 'master123', 'role' => User::MASTER]);
+        User::create(['name' => 'Коваленко Олег', 'email' => 'admin@service.test', 'password' => $adminPassword, 'role' => User::ADMIN]);
+        $master = User::create(['name' => 'Мельник Андрій', 'email' => 'master@service.test', 'password' => $masterPassword, 'role' => User::MASTER]);
+        $master2 = User::create(['name' => 'Шевченко Ірина', 'email' => 'iryna@service.test', 'password' => $masterPassword, 'role' => User::MASTER]);
 
         // Прайс-лист
         $services = collect([
