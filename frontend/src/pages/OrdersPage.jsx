@@ -117,7 +117,7 @@ export default function OrdersPage() {
       <section className="card flush">
         {orders.loading && !orders.data && <Skeleton rows={6} cols={6} />}
         <div className="table-wrap" hidden={!orders.data}>
-          <table className="table">
+          <table className="table stack">
             <thead>
               <tr>
                 <th>№</th>
@@ -132,10 +132,10 @@ export default function OrdersPage() {
             <tbody>
               {orders.data?.data.map((order) => (
                 <tr key={order.id} className="clickable" onClick={() => navigate(`/orders/${order.id}`)}>
-                  <td>
+                  <td data-label="№">
                     <span className="order-no">№{order.id}</span>
                   </td>
-                  <td>
+                  <td data-label="Клієнт">
                     <div className="person">
                       <span className="avatar sm">{initials(order.client.full_name)}</span>
                       <div>
@@ -144,9 +144,9 @@ export default function OrdersPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="nowrap">{order.device.title}</td>
-                  <td className="nowrap">{order.master.name}</td>
-                  <td>
+                  <td className="nowrap" data-label="Техніка">{order.device.title}</td>
+                  <td className="nowrap" data-label="Майстер">{order.master.name}</td>
+                  <td data-label="Статус">
                     <StatusBadge status={order.status} label={order.status_label} />
                     {order.status === 'in_repair' && (
                       <div className={`time-chip ${order.is_overdue ? 'overdue' : ''}`} title="Час у статусі «В ремонті»">
@@ -155,8 +155,8 @@ export default function OrdersPage() {
                       </div>
                     )}
                   </td>
-                  <td className="muted nowrap hide-md">{order.created_at}</td>
-                  <td className="num strong">{money(order.totals.total)}</td>
+                  <td className="muted nowrap hide-md" data-label="Створено">{order.created_at}</td>
+                  <td className="num strong" data-label="Сума">{money(order.totals.total)}</td>
                 </tr>
               ))}
               {orders.data?.data.length === 0 && (

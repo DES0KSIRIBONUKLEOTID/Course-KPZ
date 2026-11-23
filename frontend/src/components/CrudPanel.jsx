@@ -76,7 +76,7 @@ export default function CrudPanel({
       {error && <div className="alert">{error}</div>}
 
       <div className="table-wrap">
-        <table className="table">
+        <table className="table stack">
           <thead>
             <tr>
               {columns.map((c) => (
@@ -94,7 +94,7 @@ export default function CrudPanel({
                 onDoubleClick={() => canEdit && setModal({ item })}
               >
                 {columns.map((c) => (
-                  <td key={c.key}>{c.render ? c.render(item) : item[c.key]}</td>
+                  <td key={c.key} data-label={c.title}>{c.render ? c.render(item) : item[c.key]}</td>
                 ))}
                 {canEdit && (
                   <td className="actions-col">

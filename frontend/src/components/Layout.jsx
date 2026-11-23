@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { initials, roleLabel } from '../format'
+import { useMediaQuery } from '../hooks'
 import CommandPalette from './CommandPalette'
 import Icon from './Icon'
 import Notifications from './Notifications'
@@ -19,6 +20,11 @@ export default function Layout() {
   const { user, logout, isAdmin } = useAuth()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const { pathname } = useLocation()
+  const mobile = useMediaQuery('(max-width: 960px)')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // після переходу на іншу сторінку меню телефона закривається
+  useEffect(() => setMenuOpen(false), [pathname, mobile])
 
   // гарячі клавіші: Ctrl+K (Cmd+K) відкриває/закриває пошук, «/» відкриває поза полями вводу
   useEffect(() => {
@@ -38,6 +44,54 @@ export default function Layout() {
 
   return (
     <div className="shell">
+      {mobile ? (
+        <>
+          <header className="mobile-bar no-print">
+            <button
+              className="icon-btn"
+              aria-label={menuOpen ? 'Закрити меню' : 'Відкрити меню'}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <Icon name={menuOpen ? 'x' : 'menu'} size={22} />
+            </button>
+            <div className="mobile-title">
+              <span className="brand-logo small">
+                <Icon name="wrench" size={16} />
+              </span>
+              <strong>Сервісний центр</strong>
+            </div>
+            <button className="icon-btn" aria-label="Пошук і дії" onClick={() => setPaletteOpen(true)}>
+              <Icon name="search" size={20} />
+            </button>
+            <Notifications />
+          </header>
+          {menuOpen && (
+            <>
+              <div className="mobile-scrim no-print" onClick={() => setMenuOpen(false)} />
+              <nav className="mobile-menu no-print">
+                {NAV.filter((item) => !item.adminOnly || isAdmin).map((item) => (
+                  <NavLink key={item.to} to={item.to}>
+                    <Icon name={item.icon} />
+                    {item.label}
+                  </NavLink>
+                ))}
+                <div className="menu-user">
+                  <span className="avatar">{initials(user.name)}</span>
+                  <div className="who">
+                    <strong>{user.name}</strong>
+                    <small>{roleLabel(user.role)}</small>
+                  </div>
+                  <button className="btn ghost small" onClick={logout}>
+                    <Icon name="logout" size={16} />
+                    Вийти
+                  </button>
+                </div>
+              </nav>
+            </>
+          )}
+        </>
+      ) : (
       <aside className="sidebar no-print">
         <div className="brand">
           <span className="brand-logo">
@@ -76,6 +130,7 @@ export default function Layout() {
           </button>
         </div>
       </aside>
+      )}
 
       <main className="content">
         {/* key змушує сторінку з'являтися з анімацією при кожному переході */}

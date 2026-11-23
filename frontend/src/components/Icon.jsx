@@ -46,6 +46,7 @@ const PATHS = {
   edit: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
   trash: <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6" />,
   x: <path d="M18 6 6 18M6 6l12 12" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   check: <path d="M20 6 9 17l-5-5" />,
   money: (
     <>

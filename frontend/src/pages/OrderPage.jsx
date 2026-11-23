@@ -251,7 +251,7 @@ export default function OrderPage() {
 function ItemsTable({ items, closed, onRemove }) {
   return (
     <div className="table-wrap">
-      <table className="table">
+      <table className="table stack">
         <thead>
           <tr>
             <th>Назва</th>
@@ -264,10 +264,10 @@ function ItemsTable({ items, closed, onRemove }) {
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
-              <td>{item.name}</td>
-              <td className="num">{money(item.price)}</td>
-              <td className="num">{item.quantity}</td>
-              <td className="num strong">{money(item.sum)}</td>
+              <td data-label="Назва">{item.name}</td>
+              <td className="num" data-label="Ціна">{money(item.price)}</td>
+              <td className="num" data-label="К-сть">{item.quantity}</td>
+              <td className="num strong" data-label="Сума">{money(item.sum)}</td>
               {!closed && (
                 <td className="actions-col no-print">
                   <button className="icon-btn danger" title="Видалити" onClick={() => onRemove(item)}>
