@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://ЗАМІНІТЬ-НА-АДРЕСУ-RENDER.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://service-center-api-bmyi.onrender.com/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
