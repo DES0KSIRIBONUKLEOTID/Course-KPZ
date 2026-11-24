@@ -40,21 +40,72 @@ frontend/   React SPA
 ```mermaid
 erDiagram
     users ||--o{ orders : "майстер"
-    clients ||--o{ devices : має
+    clients ||--o{ devices : "має"
     devices ||--o{ orders : "ремонтується"
-    orders ||--o{ order_works : містить
-    orders ||--o{ order_parts : містить
+    orders ||--o{ order_works : "містить"
+    orders ||--o{ order_parts : "містить"
     services ||--o{ order_works : "з прайсу"
     parts ||--o{ order_parts : "зі складу"
 
-    users { id name email password role is_active }
-    clients { id full_name phone email discount }
-    devices { id client_id type brand model serial_number }
-    orders { id device_id master_id problem status closed_at created_at }
-    services { id name price }
-    parts { id name price stock }
-    order_works { id order_id service_id name price quantity }
-    order_parts { id order_id part_id name price quantity }
+    users {
+        bigint id PK
+        string name
+        string email
+        string password
+        string role
+        boolean is_active
+    }
+    clients {
+        bigint id PK
+        string full_name
+        string phone
+        string email
+        int discount
+    }
+    devices {
+        bigint id PK
+        bigint client_id FK
+        string type
+        string brand
+        string model
+        string serial_number
+    }
+    orders {
+        bigint id PK
+        bigint device_id FK
+        bigint master_id FK
+        text problem
+        string status
+        timestamp status_changed_at
+        timestamp closed_at
+    }
+    services {
+        bigint id PK
+        string name
+        decimal price
+    }
+    parts {
+        bigint id PK
+        string name
+        decimal price
+        int stock
+    }
+    order_works {
+        bigint id PK
+        bigint order_id FK
+        bigint service_id FK
+        string name
+        decimal price
+        int quantity
+    }
+    order_parts {
+        bigint id PK
+        bigint order_id FK
+        bigint part_id FK
+        string name
+        decimal price
+        int quantity
+    }
 ```
 
 Назва й ціна роботи/запчастини **копіюються** в заявку, тому зміна прайсу не змінює вартість старих заявок.
