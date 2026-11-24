@@ -117,7 +117,7 @@ export default function OrdersPage() {
       <section className="card flush">
         {orders.loading && !orders.data && <Skeleton rows={6} cols={6} />}
         <div className="table-wrap" hidden={!orders.data}>
-          <table className="table stack">
+          <table className="table cards">
             <thead>
               <tr>
                 <th>№</th>

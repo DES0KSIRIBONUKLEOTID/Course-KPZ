@@ -2228,19 +2228,19 @@ kbd {
   }
 
   /* таблиці стають списком карток: кожне поле з підписом */
-  .table.stack thead {
+  .table.cards thead {
     display: none;
   }
 
-  .table.stack,
-  .table.stack tbody,
-  .table.stack tr,
-  .table.stack td {
+  .table.cards,
+  .table.cards tbody,
+  .table.cards tr,
+  .table.cards td {
     display: block;
     width: 100%;
   }
 
-  .table.stack tbody tr {
+  .table.cards tbody tr {
     margin: 10px 0;
     padding: 6px 0;
     background: var(--surface);
@@ -2248,8 +2248,8 @@ kbd {
     border-radius: 12px;
   }
 
-  .table.stack td,
-  .table.stack td.hide-md {
+  .table.cards td,
+  .table.cards td.hide-md {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -2260,7 +2260,7 @@ kbd {
     white-space: normal;
   }
 
-  .table.stack td::before {
+  .table.cards td::before {
     content: attr(data-label);
     flex-shrink: 0;
     color: var(--muted);
@@ -2271,11 +2271,11 @@ kbd {
     text-transform: uppercase;
   }
 
-  .table.stack td:empty {
+  .table.cards td:empty {
     display: none;
   }
 
-  .table.stack td.actions-col {
+  .table.cards td.actions-col {
     justify-content: flex-end;
   }
 
@@ -2288,12 +2288,12 @@ kbd {
     overflow: hidden;
   }
 
-  .table.stack td.actions-col::before,
-  .table.stack td.empty::before {
+  .table.cards td.actions-col::before,
+  .table.cards td.empty::before {
     content: none;
   }
 
-  .table.stack .person {
+  .table.cards .person {
     text-align: left;
   }
 

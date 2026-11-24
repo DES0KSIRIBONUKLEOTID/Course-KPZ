@@ -251,7 +251,7 @@ export default function OrderPage() {
 function ItemsTable({ items, closed, onRemove }) {
   return (
     <div className="table-wrap">
-      <table className="table stack">
+      <table className="table cards">
         <thead>
           <tr>
             <th>Назва</th>

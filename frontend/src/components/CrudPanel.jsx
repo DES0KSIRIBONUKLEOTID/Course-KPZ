@@ -76,7 +76,7 @@ export default function CrudPanel({
       {error && <div className="alert">{error}</div>}
 
       <div className="table-wrap">
-        <table className="table stack">
+        <table className="table cards">
           <thead>
             <tr>
               {columns.map((c) => (
