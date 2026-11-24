@@ -271,7 +271,7 @@ function Columns({ rows }) {
 function SimpleTable({ head, rows }) {
   return (
     <div className="table-wrap">
-      <table className="table stack">
+      <table className="table cards">
         <thead>
           <tr>
             {head.map((h, i) => (
